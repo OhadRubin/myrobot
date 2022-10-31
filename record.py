@@ -20,18 +20,21 @@ def cli():
 @click.argument("file_name")
 @click.option("--offset",default=0)
 @click.option("--lookback",default=None)
-def run_json(file_name,offset,lookback):
+def play(file_name,offset,lookback):
     mycobot = MyCobot("/dev/ttyTHS1",1000000)
     with  open(file_name) as f:
         angle_list = json.load(f)[offset:]
+    angle_list =angle_list+angle_list[::-1]
     while True:
         for i,coords in enumerate(angle_list):
-            print(i+offset,coords)
-            mycobot.send_angles(coords, 85)
-            time.sleep(0.10)
+            
+            mycobot.send_angles(coords, 60)
+            print(mycobot.get_coords())
+            time.sleep(0.05)
+
 @cli.command()
 @click.argument("file_name")
-def record_json(file_name):
+def record(file_name):
     mycobot = MyCobot("/dev/ttyTHS1",1000000)
     print(f"Recording to {file_name}")
     angle_list = []
@@ -45,6 +48,16 @@ def record_json(file_name):
     except KeyboardInterrupt:
         with open(file_name,"w") as f:
             json.dump(angle_list,f)
+
+# @click.argument("file_name")
+@cli.command()
+def center():
+    mycobot = MyCobot("/dev/ttyTHS1",1000000)
+    mycobot.send_angles([0,0,0,0,0,0],50)
+@cli.command()
+def release():
+    mycobot = MyCobot("/dev/ttyTHS1",1000000)
+    mycobot.release_all_servos()
 if __name__ == '__main__':
     cli()
 # if __name__ == "__main__":
